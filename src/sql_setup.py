@@ -12,4 +12,4 @@ def close_connection(conn: sqlite3.Connection) -> None:
     """
     close the connection to the sql database
     """
-    conn.close(
+    conn.close()
