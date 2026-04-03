@@ -58,10 +58,13 @@ class sqlValidator:
         # wildcard is always valid
         if select_clause.strip() == "*":
             return True
+        
+        if '"' in select_clause:
+            return True
 
         # split columns by comma and check each
         columns = [c.strip() for c in select_clause.split(",")]
-        known_columns = schema[table_name].keys()
+        known_columns = schema.keys()
 
         for col in columns:
             col_clean = col.strip().strip('"')
