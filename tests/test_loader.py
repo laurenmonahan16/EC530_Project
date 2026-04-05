@@ -1,9 +1,11 @@
 import pytest
 import pandas as pd
+import os
+
+from conftest import DATA_DIR
 from sql_setup import get_connection, close_connection
 from csv_loader import csvLoader
 from schema_manager import SchemaManager
-
 
 @pytest.fixture
 def setup():
@@ -20,7 +22,7 @@ testing load_csv() function
 """
 def test_load_csv(setup):
     loader, _ = setup
-    df = loader.load_csv("../data/sample.csv")
+    df = loader.load_csv(os.path.join(DATA_DIR, "sample.csv"))
     
     assert len(df) == 3
     assert list(df.columns) == ["name", "age", "gender"]
@@ -100,8 +102,8 @@ testing ingest() function
 def test_ingest_appends(setup):
     loader, manager = setup
 
-    loader.ingest("../data/sample.csv", "Family", manager)
-    loader.ingest("../data/sample.csv", "Family", manager) 
+    loader.ingest(os.path.join(DATA_DIR, "sample.csv"), "Family", manager)
+    loader.ingest(os.path.join(DATA_DIR, "sample.csv"), "Family", manager)
 
     result = loader.conn.execute("SELECT * FROM Family").fetchall()
 
@@ -110,14 +112,16 @@ def test_ingest_appends(setup):
 def test_ingest_mismatch_schema(setup):
     loader, manager = setup
 
-    loader.ingest("../data/sample.csv", "Family", manager)
+    loader.ingest(os.path.join(DATA_DIR, "sample.csv"), "Family", manager)
     with pytest.raises(ValueError):
-        loader.ingest("../data/sample_modified.csv", "Family", manager) 
+        loader.ingest(os.path.join(DATA_DIR, "sample_modified.csv"), "Family", manager)
 
 def test_ingest_overwrite_on_mismatch(setup):
     loader, manager = setup
-    loader.ingest("../data/sample.csv", "Family", manager)
-    loader.ingest("../data/sample_modified.csv", "Family", manager, on_conflict="overwrite")
-    # verify new schema is in place
+    
+    loader.ingest(os.path.join(DATA_DIR, "sample.csv"), "Family", manager)
+    loader.ingest(os.path.join(DATA_DIR, "sample_modified.csv"), "Family", manager, on_conflict="overwrite")
+    
+    # verify table updated to new schema 
     schema = manager.get_table_schema("Family")
     assert "height" in schema

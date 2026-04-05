@@ -1,4 +1,7 @@
 import pytest
+import os
+
+from conftest import DATA_DIR
 from sql_setup import get_connection, close_connection
 from csv_loader import csvLoader
 from schema_manager import SchemaManager
@@ -7,11 +10,11 @@ from query_service import QueryService
 
 @pytest.fixture
 def validator():
-    conn = get_connection("testing_db")
+    conn = get_connection(":memory:")
 
     manager = SchemaManager(conn)
     loader = csvLoader(conn)
-    loader.ingest("../data/sample.csv", "Family", manager)
+    loader.ingest(os.path.join(DATA_DIR, "sample.csv"), "Family", manager)
     validator = sqlValidator(conn, manager)
     return validator
 
