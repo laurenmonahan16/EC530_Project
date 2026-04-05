@@ -2,7 +2,6 @@ import pytest
 from sql_setup import get_connection, close_connection
 from schema_manager import SchemaManager
 
-
 @pytest.fixture
 def setup():
     conn = get_connection(":memory:")
@@ -11,7 +10,6 @@ def setup():
     yield manager
 
     close_connection(conn)
-
 
 """
 testing discover_existing_tables function
