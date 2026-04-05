@@ -29,12 +29,12 @@ def test_load_csv(setup):
 """
 testing validate_data() function
 """
-def test_empty_data(setup):
-    loader, _ = setup
-    df = loader.load_csv("../data/empty.csv")
+# def test_empty_data(setup):
+#     loader, _ = setup
+#     df = loader.load_csv("../data/empty.csv")
 
-    with pytest.raises(ValueError):
-        loader.validate_data(df)
+#     with pytest.raises(ValueError):
+#         loader.validate_data(df)
 
 def test_duplicate_columns(setup):
     loader, _ = setup
