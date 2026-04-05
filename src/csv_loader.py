@@ -91,9 +91,7 @@ class csvLoader:
         self.conn.executemany(sql_insert, rows)
         self.conn.commit()
 
-       
-
-    def ingest(self, filepath: str, table_name: str, schema_manager: SchemaManager) -> None:
+    def ingest(self, filepath: str, table_name: str, schema_manager: SchemaManager, on_conflict: str = "error") -> None:
         """
         executes: load -> validate -> check schema -> create or append -> insert
         """
@@ -122,14 +120,28 @@ class csvLoader:
                 # append data to existing table 
                 self.insert_rows(df, table_name)
             else: 
-                print(f"Schemas dont match for table by name {table_name}")
-                # later cli should prompt user on what they want to do
-                # 1) do u want to rename the table? 
-                # 2) overwrite the one that exists by same name but the schema doesnt match?
-                # 3) skip ingestion entirely
+                #cli will prompt user on what they want to do in event of schema mismatch
+                    # 1) overwrite the one that exists by same name? 
+                    # 2) rename the table being ingested? 
+                    # 3) skip ingestion entirely?
+
+                if on_conflict == "skip":
+                    print(f"Skipping ingestion for '{table_name}' due to schema mismatch")
+                    return
+                elif on_conflict == "overwrite":
+                    schema_manager.drop_table(table_name)
+                    create_statement = schema_manager.generate_create_statement(table_name, csv_schema)
+                    schema_manager.execute_create(create_statement)
+                    self.insert_rows(df, table_name)
+                elif on_conflict == "rename":
+                    create_statement = schema_manager.generate_create_statement(table_name, csv_schema)
+                    schema_manager.execute_create(create_statement)
+                    self.insert_rows(df, table_name)
+                else:
+                    raise ValueError(f"Schema mismatch for table '{table_name}'")
+        
         else:
             #no table by that name exists yet, create new table & insert data
-        
             create_statement = schema_manager.generate_create_statement(table_name, csv_schema)
             schema_manager.execute_create(create_statement)
 

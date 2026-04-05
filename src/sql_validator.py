@@ -36,6 +36,43 @@ class sqlValidator:
         return table_name in known_tables
 
 
+    # def is_valid_column(self, query: str) -> bool:
+    #     """
+    #     reject queries referencing unknown columns
+    #     """
+
+    #     tokens = query.strip().split()
+    #     upper_tokens = [t.upper() for t in tokens]
+
+    #     if "FROM" not in upper_tokens:
+    #         return False
+
+    #     from_index = upper_tokens.index("FROM")
+    #     table_name = tokens[from_index + 1].strip(";,")
+        
+    #     schema = self.schema_manager.get_table_schema(table_name)
+
+    #     # extract everything between SELECT and FROM
+    #     select_clause = " ".join(tokens[1:from_index])
+
+    #     # wildcard is always valid
+    #     if select_clause.strip() == "*":
+    #         return True
+        
+    #     if '"' in select_clause:
+    #         return True
+
+    #     # split columns by comma and check each
+    #     columns = [c.strip() for c in select_clause.split(",")]
+    #     known_columns = schema.keys()
+
+    #     for col in columns:
+    #         col_clean = col.strip().strip('"')
+    #         if col_clean not in known_columns:
+    #             return False
+
+    #     return True
+
     def is_valid_column(self, query: str) -> bool:
         """
         reject queries referencing unknown columns
@@ -51,27 +88,29 @@ class sqlValidator:
         table_name = tokens[from_index + 1].strip(";,")
         
         schema = self.schema_manager.get_table_schema(table_name)
+        known_columns = schema.keys()
 
         # extract everything between SELECT and FROM
         select_clause = " ".join(tokens[1:from_index])
 
-        # wildcard is always valid
-        if select_clause.strip() == "*":
-            return True
-        
-        if '"' in select_clause:
-            return True
+        # wildcard — skip SELECT clause check but still check WHERE
+        if select_clause.strip() != "*" and '"' not in select_clause:
+            columns = [c.strip() for c in select_clause.split(",")]
+            for col in columns:
+                col_clean = col.strip().strip('"')
+                if col_clean not in known_columns:
+                    return False
 
-        # split columns by comma and check each
-        columns = [c.strip() for c in select_clause.split(",")]
-        known_columns = schema.keys()
-
-        for col in columns:
-            col_clean = col.strip().strip('"')
-            if col_clean not in known_columns:
-                return False
+        # check WHERE clause column if present
+        if "WHERE" in upper_tokens:
+            where_index = upper_tokens.index("WHERE")
+            if where_index + 1 < len(tokens):
+                where_col = tokens[where_index + 1].strip(";,")
+                if where_col not in known_columns:
+                    return False
 
         return True
+
 
     def validate(self, query: str) -> tuple[bool, str]:
         """

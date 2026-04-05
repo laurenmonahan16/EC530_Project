@@ -22,7 +22,19 @@ def main():
         if command.startswith("ingest"):
             try:
                 _, path, table = command.split()
-                loader.ingest(path, table, manager)
+                try:
+                    loader.ingest(path, table, manager)
+                except ValueError as e:
+                    print(f"Schema conflict: {e}")
+                    print("Would you like to:\n1. Overwrite the existing table\n2. Rename table\n3. Skip ingestion")
+                    choice = input("Choose: ").strip()
+                    if choice == "1":
+                        loader.ingest(path, table, manager, on_conflict="overwrite")
+                    elif choice == "2":
+                        new_name = input("Enter new table name: ").strip()
+                        loader.ingest(path, new_name, manager, on_conflict="rename")
+                    elif choice == "3":
+                        loader.ingest(path, table, manager, on_conflict="skip")
             except ValueError:
                 print("Usage: ingest <path> <table_name>")
 
@@ -62,12 +74,12 @@ def main():
         
         elif command == "help":
             print("Commands:")
-            print("  ingest <path> <table>  - load a CSV file")
-            print("  query <sql>            - run a SQL query")
-            print("  ask <question>         - natural language query")
-            print("  tables                 - list all tables")
-            print("  schema <table>         - show table schema")
-            print("  exit                   - quit")
+            print("  ingest <path> <tablename>  - load a CSV file")
+            print("  query <sql>                - run a SQL query")
+            print("  ask <question>             - natural language query")
+            print("  tables                     - list all tables")
+            print("  schema <table>             - show table schema")
+            print("  exit                       - quit")
 
         else:
             print("Unknown command")

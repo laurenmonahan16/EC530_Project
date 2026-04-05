@@ -110,3 +110,7 @@ class SchemaManager:
 
        self.cur.execute(f'{create_command}')
        self.conn.commit()
+
+    def drop_table(self, table_name: str) -> None:
+        self.conn.execute(f"DROP TABLE IF EXISTS {table_name}")
+        self.conn.commit()
