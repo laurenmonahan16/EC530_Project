@@ -73,3 +73,6 @@ pytest
 
 - **In-memory SQLite is used for tests** 
     — Using `:memory:` gives each test a clean database with no setup or cleanup needed, making tests fast and isolated
+
+## Video Link
+https://youtu.be/iK60-kRzJGE
